@@ -23,13 +23,13 @@ function guardarCliente() {
     if (camposVacios) {
         // Verificar si ya hay una alerta
         const existeAlerta = document.querySelector('.invalid-feedback');
-        
+
         if (!existeAlerta) {
             const alerta = document.createElement('div');
             alerta.classList.add('invalid-feedback', 'd-block', 'text-center');
             alerta.textContent = 'Todos los campos son obligatorios';
             document.querySelector('.modal-body form').appendChild(alerta);
-            
+
             // Eliminar la alerta
             setTimeout(() => {
                 alerta.remove()
@@ -40,7 +40,7 @@ function guardarCliente() {
     }
 
     // Asignar datos del formulario a cliente
-    cliente = {...cliente, mesa, hora}
+    cliente = { ...cliente, mesa, hora }
 
     // Ocultar Modal
     const modalFormulario = document.querySelector('#formulario');
@@ -95,7 +95,7 @@ function mostrarPlatillos(platillos) {
         // Función que detecta la cantidad y el platillo que se esta agregando
         inputCantidad.onchange = function () {
             const cantidad = parseInt(inputCantidad.value);
-            agregarPlatillo({...platillo, cantidad});
+            agregarPlatillo({ ...platillo, cantidad });
         }
 
         const agregar = document.createElement('div');
@@ -112,16 +112,16 @@ function mostrarPlatillos(platillos) {
 
 function agregarPlatillo(producto) {
     // Extraer el pedido actual
-    let {pedido} = cliente;
+    let { pedido } = cliente;
 
     // Revisar que la cantidad sea mayor a 0
-    if(producto.cantidad > 0) {
+    if (producto.cantidad > 0) {
 
         // Comprueba si el elemento ya existe en el array
-        if(pedido.some( articulo => articulo.id === producto.id )){
+        if (pedido.some(articulo => articulo.id === producto.id)) {
             // El articulo ya existe, Actualizar la cantidad
             const pedidoActualizado = pedido.map(articulo => {
-                if(articulo.id === producto.id) {
+                if (articulo.id === producto.id) {
                     articulo.cantidad = producto.cantidad;
                 }
                 return articulo;
@@ -132,18 +132,22 @@ function agregarPlatillo(producto) {
             // El articulo no existe, lo agregamos al array de pedido
             cliente.pedido = [...pedido, producto];
         }
-        
+
     } else {
         // Eliminar elementos cuando la cantidad es 0
         const resultado = pedido.filter(articulo => articulo.id !== producto.id);
-        cliente.pedido = [...resultado]
+        cliente.pedido = [...resultado];
     }
 
     // Limpiar el código HTML previo
     limpiarHTML();
 
-    // Mostrar el Resumen
-    actualizarResumen();
+    if (cliente.pedido.length) {
+        // Mostrar el Resumen
+        actualizarResumen();
+    } else {
+        mensajePedidoVacio();
+    }
 }
 
 function actualizarResumen() {
@@ -151,7 +155,7 @@ function actualizarResumen() {
 
     const resumen = document.createElement('div');
     resumen.classList.add('col-md-6', 'card', 'py-5', 'px-3', 'shadow');
-    
+
     // Información de la mesa 
     const mesa = document.createElement('p');
     mesa.textContent = 'Mesa: ';
@@ -183,9 +187,9 @@ function actualizarResumen() {
     const grupo = document.createElement('ul');
     grupo.classList.add('list-group');
 
-    const {pedido} = cliente;
+    const { pedido } = cliente;
     pedido.forEach(articulo => {
-        const {nombre, cantidad, precio, id} = articulo;
+        const { nombre, cantidad, precio, id } = articulo;
 
         const lista = document.createElement('li');
         lista.classList.add('list-group-item');
@@ -227,7 +231,7 @@ function actualizarResumen() {
         btnEliminar.textContent = 'Eliminar el Pedido';
 
         // Función para eliminar el pedido
-        btnEliminar.onclick = function() {
+        btnEliminar.onclick = function () {
             eliminarProducto(id);
         }
 
@@ -258,7 +262,7 @@ function actualizarResumen() {
 
 function limpiarHTML() {
     const contenido = document.querySelector('#resumen .contenido');
-    while(contenido.firstChild) {
+    while (contenido.firstChild) {
         contenido.removeChild(contenido.firstChild);
     }
 }
@@ -268,13 +272,32 @@ function calcularSubtotal(precio, cantidad) {
 }
 
 function eliminarProducto(id) {
-    const {pedido} = cliente;
+    const { pedido } = cliente;
     const resultado = pedido.filter(articulo => articulo.id !== id);
     cliente.pedido = [...resultado];
 
     // Limpiar el código HTML previo
     limpiarHTML();
 
-    // Mostrar el Resumen
-    actualizarResumen();
+    if (cliente.pedido.length) {
+        // Mostrar el Resumen
+        actualizarResumen();
+    } else {
+        mensajePedidoVacio();
+    }
+
+    // El Producto se eleminó por lo tanto regresamos la cantidad a 0 en el formulario
+    const productoEliminado = `#producto-${id}`;
+    const inputEliminado = document.querySelector(productoEliminado);
+    inputEliminado.value = 0;
+}
+
+function mensajePedidoVacio() {
+    const contenido = document.querySelector('#resumen .contenido');
+
+    const texto = document.createElement('p');
+    texto.classList.add('text-center');
+    texto.textContent = 'Añade los elementos del pedido';
+
+    contenido.appendChild(texto);
 }
